@@ -1,0 +1,29 @@
+'''
+Author:ys3334@nyu
+Security check to detect whether file being written to is allowed to complete write
+without closing the file
+Disclaimer: This attack has been directly drawn from the Seattle Website attack sample
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+#Removing the file if it exists to filter out unnecessary error warnings.....
+
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+myfile=ABopenfile("testfile.txt",True)  #Create an AB file
+
+try:
+    #Empty file case
+    myfile.writeat("SxyzxyzxyzE",0)
+    # I should still get 'SE' because the file wasn't closed.
+    assert("SE"==myfile.readat(2,0))
+except:
+    log("SECURITY_BUG: error detected ")
+finally:
+    myfile.close()

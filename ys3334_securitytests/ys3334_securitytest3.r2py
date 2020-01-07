@@ -1,0 +1,53 @@
+'''
+Author: ys3334@nyu.edu
+Testing whether the empty file scenario is handled properly
+This security check is used to test thread safety
+2 threads are present , one thread writes to the files
+the other thread tries to acquire the lock and remove it
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+
+
+def deleteFileThread():
+    try:
+        if "testfile.txt.a" in listfiles():
+            removefile("testfile.txt.a")
+        if "testfile.txt.b" in listfiles():
+            removefile("testfile.txt.b")
+        log("ACCURACY_BUG:Removed file while it was being written to\n")
+    except:
+        pass
+    finally:
+      #sys.exit(0)
+      pass
+
+def writeThread():
+  # New File Operation
+  myfile=ABopenfile("testfile.txt", True)
+  if myfile.readat(2,0) == "SE":
+    try:
+      myfile.writeat("SxyzxyzxyzE",0)
+      sleep(7)
+      myfile.close()
+    except RepyArgumentError:
+      pass
+    finally:
+      #exit(0)
+      #exitall() cannot use exital
+      pass
+  else:
+      pass
+      #This condition is already being checked against in other securitty checks
+
+createthread(writeThread)
+createthread(deleteFileThread)

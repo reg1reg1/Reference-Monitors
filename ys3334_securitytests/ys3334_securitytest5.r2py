@@ -1,0 +1,33 @@
+'''
+Author: ys3334@nyu.edu
+Testing for accuracy bug, invalid update being allowed:
+Invalid write being allowed
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+
+
+myfile=ABopenfile("testfile.txt",True)
+myfile.writeat("SxE",0)
+myfile.close()
+#myfile=ABopenfile("testfile.txt",True)
+#myfile.writeat("invalidwrite2X",0) #This write violates the condition , and hence should be discarded
+#myfile.close()
+myfile=ABopenfile("testfile.txt",True)
+
+try:
+    #log(myfile.readat(None,0))
+    assert('Svalidwrite1E' == myfile.readat(None,0))
+    #Close the file
+    myfile.close()
+except:
+    #Close the file
+    myfile.close()
+    log("SECURITY_BUG: Unsuccessful, invalid write allowed \n")

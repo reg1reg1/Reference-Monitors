@@ -1,0 +1,27 @@
+'''
+Author: ys3334@nyu.edu
+ACCURACY_BUG
+Trying to check for a file which does not exist.
+This will first remove the file , and then call the same file to see if it has been removed properly.
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+
+
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+
+try:
+    myfile=ABopenfile("testfile.txt",False) 
+    #Above should fail and raise an exception in normal cases
+except FileNotFoundError:
+    pass
+    #log("SUCCESSFUL DEFENSE")
+else:
+    log("ACCURACY_BUG: Non-existent File opened\n")

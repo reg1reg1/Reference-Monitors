@@ -1,0 +1,34 @@
+'''
+Author: ys3334@nyu.edu
+Trying to open file with TRUE option even when it exists (Should work normally)
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+# Clean up of existing file
+
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+
+myfile=ABopenfile("testfile.txt", True)
+myfile.close()
+
+try:
+    myfile=ABopenfile("testfile.txt", True)
+except:
+    log("ACCURACY_BUG:Existent file denied access")
+#createthread(writeThreadC)
+#createthread(writeThreadD)
+#createthread(closeFileThread)
+
+
+'''
+sleep(2)
+myfile=ABopenfile("testfile.txt", True)
+myfile.readat(None,0)
+'''

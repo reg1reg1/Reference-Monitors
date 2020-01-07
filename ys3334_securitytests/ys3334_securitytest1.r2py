@@ -1,0 +1,30 @@
+'''
+Author: ys3334@nyu.edu
+Testing whether the empty file scenario is handled properly
+It is a accuracy flaw if the empty file returns anything other than SE
+Simple try/catch logic to output the error string
+If the program does not print any output other than Terminated, the security layer is successful
+Disclaimer: This attack has been directly drawn from the Seattle Website attack sample
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+#Removing the file if it exists to filter out unnecessary error warnings.....
+if "testfile.txt.a" in listfiles():
+  removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+  removefile("testfile.txt.b")
+
+
+myfile=ABopenfile("testfile.txt",True)  #Create an AB file if it does not exists(We removed it above)
+
+try:
+    #Empty file case checked
+    assert('SE' == myfile.readat(2,0))
+    myfile.close()
+except:
+    log("ACCURACY_BUG: Empty file condition check not present\n")
+    myfile.close()

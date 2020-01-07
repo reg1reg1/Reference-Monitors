@@ -1,0 +1,150 @@
+TYPE="type"
+ARGS="args"
+RETURN="return"
+EXCP="exceptions"
+TARGET="target"
+FUNC="func"
+OBJC="objc"
+
+'''
+Author: ys3334@nyu.edu
+Reference monitor initialization code
+Basic idea is to exhaust all cases where an attacker might make the system throw an exceptions
+This idea of exploiting a system by causing it to throw exception is common and such a system is called Fail-Open system
+It is important to catch exceptions and prevent disrupt of normal flow of application
+Since the statement says to drop output, these usual exceptions have been caught and supressed.
+'''
+class ABFile():
+    def __init__(self,filename,create):
+        # globals
+        mycontext['debug'] = False
+        # local (per object) reference to the underlying file
+        self.lock = createlock()
+        #initializing variables for a
+        self.Afn = filename+'.a'
+        self.Bfn = filename+'.b'
+        # make the files and add 'SE' to the readat file..
+        #A is the readFile or valid file
+        #boolean value create used to create file if not present
+        if create:
+            if self.Afn in listfiles():
+                #Checking skeleton code from sample attack for file availibility
+                #This will be the case for availibility
+                self.Afile = openfile(self.Afn,create)
+                self.Bfile = openfile(self.Bfn,create)
+                self.Bfile.writeat(self.Afile.readat(None,0),0)
+            else:
+                #create file and handle empty file
+                #availability 2nd case
+                self.Afile = openfile(self.Afn,create)
+                self.Bfile = openfile(self.Bfn,create)
+                self.Afile.writeat('SE', 0)
+        else:
+            #log("FILE OBJCT--->"+str(self.Afn))
+            #log("ERROR thrown no nackup file present")
+            if self.Afn in listfiles():
+                self.Afile = openfile(self.Afn,True)
+                self.Bfile = openfile(self.Bfn,True)
+                self.Bfile.writeat(self.Afile.readat(None,0),0)
+            else:
+                #log("File is not present exception thrown")
+                #log("Case to bypass")
+                raise FileNotFoundError
+                #Suprressed exceptions as was not supposed to create any file
+                pass
+
+    def readat(self,bytes,offset):
+        #Creating the Lock
+        #Set the Lock to Blocking
+        self.lock.acquire(True)
+        #Offset and Length Validation for Read Call
+        length = len(self.Afile.readat(None,0))
+        #iterating through all the exception cases
+        if type(offset) is not int:
+            raise TypeError
+            self.lock.relase()
+        if offset < 0 or length < 0:
+            raise RepyArgumentError
+            self.lock.release()
+        elif offset >= len(self.Afile.readat(None,0)):
+            raise SeekPastEndOfFileError
+            self.lock.release()
+        elif bytes > length and bytes != None:
+            raise SeekPastEndOfFileError
+            self.lock.release()
+        elif (len(self.Afile.readat(None,0)) < offset+length) and bytes != None:
+            raise RepyArgumentError
+            self.lock.release()
+        else:
+            #Data is read and then released if there is no error thrown or a problem with the argument
+            try:
+                read_data = self.Afile.readat(bytes,offset)
+                self.lock.release()
+                return read_data
+            except:
+                raise RepyArgumentError
+
+
+
+    def writeat(self,data,offset):
+        if(self.lock.acquire(True)):
+            if offset < 0:
+                #log("UNDERFLOW ERROR----------------------->")
+                raise RepyArgumentError
+                self.lock.release()
+            elif offset > len(self.Bfile.readat(None,0)):
+                #case where file write overflow
+                #log("OVERFLOW ERROR----------------------->")
+                raise SeekPastEndOfFileError
+                self.lock.release()
+            else:
+                #Case where there is no flaw, proceed to write to the file
+                self.Bfile.writeat(data,offset)
+                self.lock.release()
+
+    def close(self):
+        #back_up data will be written in valid file
+        validData = self.Afile.readat(None,0)
+        #data which is being written to the fileB
+        invalidData = self.Bfile.readat(None,0)
+        backupfile  = self.Afn
+        #Check if the written file starts with "S" and ends with "E"
+        if self.Bfile.readat(None,0).startswith("S") and self.Bfile.readat(None,0).endswith("E"):
+            #close the file and discard old versions
+            self.Afile.close()
+            self.Bfile.close()
+            removefile(self.Afn)
+            openfile(backupfile,True).writeat(invalidData,0)
+            removefile(self.Bfn)
+        else:
+            #The case where the invalid file needs to be discarded
+            #log("Attempting to close files")
+            self.Afile.close()
+            self.Bfile.close()
+            #log("Files closed successfully")
+            removefile(self.Afn)
+            openfile(backupfile,True).writeat(validData,0)
+            removefile(self.Bfn)
+
+def ABopenfile(filename, create):
+    return ABFile(filename,create)
+
+
+
+
+# The code here sets up type checking and variable hiding for you.  You
+# should not need to change anything below here.
+sec_file_def = {"obj-type":ABFile,
+                "name":"ABFile",
+                "writeat":{"type":"func","args":(str,(int,long)),"exceptions":Exception,"return":(int,type(None)),"target":ABFile.writeat},
+                "readat":{"type":"func","args":((int,long,type(None)),(int,long)),"exceptions":Exception,"return":str,"target":ABFile.readat},
+                "close":{"type":"func","args":None,"exceptions":None,"return":(bool,type(None)),"target":ABFile.close}
+           }
+
+CHILD_CONTEXT_DEF["ABopenfile"] = {TYPE:OBJC,ARGS:(str,bool),EXCP:Exception,RETURN:sec_file_def,TARGET:ABopenfile}
+
+# Execute the user code
+secure_dispatch_module()
+
+#wrapperLockObject on native lock object more secure
+# Can be used to securely lock and release an object

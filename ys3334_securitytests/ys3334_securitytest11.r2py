@@ -1,0 +1,51 @@
+'''
+Author: ys3334@nyu.edu
+>1 file use case. Trying to check whether security layer is able to preserve multiple file cases
+2files used
+Single threaded code used to check whether both files are stored separately
+
+NOTE:========================================================
+There is a race condition which needs to be checked for
+There can be a case when the reference monitor enters the state of deadlock
+The only logic I could come up with to check against this was to use exitall once a certain timer is reached
+However, the assignment instruction explicitly mentions NOT to use exitall
+'''
+
+# Remove all files
+if "testfile.txt.a" in listfiles():
+    removefile("testfile.txt.a")
+if "testfile.txt.b" in listfiles():
+    removefile("testfile.txt.b")
+
+if "testfile2.txt.a" in listfiles():
+    removefile("testfile2.txt.a")
+if "testfile2.txt.b" in listfiles():
+    removefile("testfile2.txt.b")
+
+#Preparing and wriiting
+myfile1=ABopenfile("testfile.txt",True)
+myfile2=ABopenfile("testfile2.txt",True)
+myfile1.writeat("SxyzE",0)
+myfile2.writeat("SabcE",0)
+myfile1.close()
+myfile2.close()
+myfile1=ABopenfile("testfile.txt",True)
+myfile2=ABopenfile("testfile2.txt",True)
+try:
+    #validate the attack correction
+    #log(myfile1.readat(None,0))
+    #log(myfile2.readat(None,0))
+
+    assert('SxyzE' == myfile1.readat(None,0))
+    assert('SabcE' == myfile2.readat(None,0))
+    #Close the file
+    myfile1.close()
+    myfile2.close()
+except:
+    myfile1.close()
+    myfile2.close()
+    log("ACCURACY_BUG:multiple file use case write failure")
+finally:
+    pass
+    #myfile1.close()
+    #myfile2.close()
